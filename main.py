@@ -586,7 +586,7 @@ def generate_pnl_card(message):
 
         # Generate card image
         output_path = f"pnl_card_{user_id}_{int(time.time())}.png"
-        template_path = "fonts/template_full.png"  # Make sure this exists
+        template_path = "template/template_full.png"  # Make sure this exists
 
         # Format data for card
         token_name = f"${pnl_data['token_symbol']}" if pnl_data['token_symbol'] else pnl_data['token_name']
