@@ -114,7 +114,6 @@ class SolanaPnLCalculator:
             raise Exception(f"Failed to get token accounts: {response.status_code}")
 
         data = response.json()
-        print(response.json())
         if not data.get("success"):
             raise Exception("API request was not successful")
 
@@ -456,12 +455,14 @@ def generate_investment_card(template_path, output_path, token_name="", percenta
         title_font = ImageFont.truetype("fonts/YapariTrial-Bold.ttf", 100)
         percentage_font = ImageFont.truetype("fonts/Exo2-Bold.ttf", 120)
         label_font = ImageFont.truetype("fonts/Exo2-VariableFont_wght.ttf", 50)
-        tag_font = ImageFont.truetype("fonts/Exo2-LightItalic.ttf", 60)
+        label_font_2 = ImageFont.truetype("fonts/Exo2-Bold.ttf", 60)
+        tag_font = ImageFont.truetype("fonts/Exo2-Bold.ttf", 60)
     except IOError:
         print("Font not found, using default font.")
         title_font = ImageFont.load_default()
         percentage_font = ImageFont.load_default()
         label_font = ImageFont.load_default()
+        label_font_2 = ImageFont.load_default()
         tag_font = ImageFont.load_default()
 
     # Draw token name
@@ -479,7 +480,7 @@ def generate_investment_card(template_path, output_path, token_name="", percenta
 
     # Add data values
     if bought_amount:
-        draw.text((600, 610), f"{bought_amount} SOL", fill=(255, 255, 255), font=label_font)
+        draw.text((600, 610), f"{bought_amount} SOL", fill=(255, 255, 255), font=label_font_2)
 
     if holding_amount:
         draw.text((200, 1000), f"{holding_amount}", fill=(255, 255, 255), font=tag_font)
@@ -518,7 +519,7 @@ def send_welcome(message):
     """Send welcome message when /start command is issued."""
     bot.reply_to(message, "Welcome to the Solana PnL Card Bot! \n\n" +
                  "Set your wallet address with: /wallet_address <your_wallet_address>\n" +
-                 "Then check token PnL with: /pnl <token_mint_address>")
+                 "Then check token PnL with: /my_pnl <token_mint_address>")
 
 
 @bot.message_handler(commands=['wallet_address'])
@@ -550,14 +551,14 @@ def set_wallet_address(message):
         bot.reply_to(message, "An error occurred. Please try again later.")
 
 
-@bot.message_handler(commands=['pnl'])
+@bot.message_handler(commands=['my_pnl'])
 def generate_pnl_card(message):
     """Generate PnL card for a token."""
     try:
         # Extract token mint address
         command_parts = message.text.split(' ', 1)
         if len(command_parts) < 2:
-            bot.reply_to(message, "Please provide a token mint address.\nUsage: /pnl <token_mint_address>")
+            bot.reply_to(message, "Please provide a token mint address.\nUsage: /my_pnl <token_mint_address>")
             return
 
         token_mint = command_parts[1].strip()
