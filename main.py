@@ -1,6 +1,8 @@
 import os
 import json
 import logging
+import pprint
+
 import telebot
 from PIL import Image, ImageDraw, ImageFont
 import requests
@@ -16,7 +18,7 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 # Bot configuration
-TOKEN = "8000534296:AAEIc6Fqm1eMD8H3dpl0OsN-wofhdgEnDvs"
+TOKEN = "7540676289:AAH5NxLJuuCapz3tsibUsorw2_sssJuXpHI"
 bot = telebot.TeleBot(TOKEN)
 
 # File to store user wallet addresses
@@ -338,6 +340,7 @@ class SolanaPnLCalculator:
         total_sold = 0
         total_revenue = 0
         current_balance = 0
+        total_sold_sol = 0
 
         transfer_details = []
 
@@ -376,6 +379,7 @@ class SolanaPnLCalculator:
                 total_cost_sol += sol_value
                 current_balance += amount_decimal
             elif flow == "out":
+                total_sold_sol += sol_value
                 total_sold += amount_decimal
                 total_revenue += value
                 current_balance -= amount_decimal
@@ -383,18 +387,20 @@ class SolanaPnLCalculator:
             transfer_details.append(transfer_info)
 
         # Calculate current value using the latest price
+        if current_balance < 0:
+            total_bought = total_bought + current_balance * -1 * self.sol_price
+            current_balance = 0
         current_price = self.token_info.get("price_usdt", 0) if self.token_info else 0
         current_value = current_balance * current_price
 
         # Calculate PnL
         avg_cost_per_token = total_cost_usd / total_bought if total_bought else 0
-        realized_pnl = total_revenue - (avg_cost_per_token * total_sold)
-        unrealized_pnl = current_value - (avg_cost_per_token * current_balance)
+        realized_pnl = total_sold_sol - total_cost_sol
+        unrealized_pnl = current_value / self.sol_price
         total_pnl = realized_pnl + unrealized_pnl
 
         # Calculate ROI
-        roi_percentage = (total_pnl / total_cost_usd * 100) if total_cost_usd else 0
-
+        roi_percentage = (total_pnl / total_cost_sol * 100) if total_cost_sol else 0
         return {
             "token_symbol": token_symbol,
             "token_name": token_name,
@@ -519,7 +525,7 @@ def send_welcome(message):
     """Send welcome message when /start command is issued."""
     bot.reply_to(message, "Welcome to the Solana PnL Card Bot! \n\n" +
                  "Set your wallet address with: /wallet_address <your_wallet_address>\n" +
-                 "Then check token PnL with: /my_pnl <token_mint_address>")
+                 "Then check token PnL with: /mypnl <token_mint_address>")
 
 
 @bot.message_handler(commands=['wallet_address'])
@@ -551,14 +557,14 @@ def set_wallet_address(message):
         bot.reply_to(message, "An error occurred. Please try again later.")
 
 
-@bot.message_handler(commands=['my_pnl'])
+@bot.message_handler(commands=['mypnl'])
 def generate_pnl_card(message):
     """Generate PnL card for a token."""
     try:
         # Extract token mint address
         command_parts = message.text.split(' ', 1)
         if len(command_parts) < 2:
-            bot.reply_to(message, "Please provide a token mint address.\nUsage: /my_pnl <token_mint_address>")
+            bot.reply_to(message, "Please provide a token mint address.\nUsage: /mypnl <token_mint_address>")
             return
 
         token_mint = command_parts[1].strip()
@@ -594,8 +600,11 @@ def generate_pnl_card(message):
         percentage = str(int(pnl_data['roi_percentage'])) if abs(
             pnl_data['roi_percentage']) > 100 else f"{pnl_data['roi_percentage']:.1f}"
         bought_amount = format_number(pnl_data['total_cost_sol'])
-        profit_sol = format_number(pnl_data['total_pnl'] / calculator.sol_price if calculator.sol_price else 0)
-        profit_usd = format_number(pnl_data['total_pnl'])
+        profit_sol = format_number(pnl_data['total_pnl'])
+        if pnl_data['total_pnl'] * calculator.sol_price > 0:
+            profit_usd = '+$' + format_number(pnl_data['total_pnl'] * calculator.sol_price)
+        else:
+            '-$' + format_number(pnl_data['total_pnl'] * calculator.sol_price * -1)
 
         # Get username
         username = f"@{message.from_user.username}" if message.from_user.username else f"user{user_id}"
