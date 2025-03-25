@@ -1,8 +1,6 @@
 import os
 import json
 import logging
-import pprint
-
 import telebot
 from PIL import Image, ImageDraw, ImageFont
 import requests
@@ -18,7 +16,7 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 # Bot configuration
-TOKEN = "7540676289:AAH5NxLJuuCapz3tsibUsorw2_sssJuXpHI"
+TOKEN = "8000534296:AAEIc6Fqm1eMD8H3dpl0OsN-wofhdgEnDvs"
 bot = telebot.TeleBot(TOKEN)
 
 # File to store user wallet addresses
