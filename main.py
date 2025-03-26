@@ -394,9 +394,9 @@ class SolanaPnLCalculator:
 
         # Calculate PnL
         avg_cost_per_token = total_cost_usd / total_bought if total_bought else 0
-        realized_pnl = total_sold_sol - total_cost_sol
+        realized_pnl = total_sold_sol
         unrealized_pnl = current_value / self.sol_price
-        total_pnl = realized_pnl + unrealized_pnl
+        total_pnl = realized_pnl + unrealized_pnl - total_cost_sol
 
         # Calculate ROI
         roi_percentage = (total_pnl / total_cost_sol * 100) if total_cost_sol else 0
