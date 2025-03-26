@@ -106,7 +106,8 @@ class SolanaPnLCalculator:
             "page": 1,
             "page_size": 480,
             "type": "token",
-            "hide_zero": False
+            "hide_zero": False,
+            "filter": self.token_mint
         }
 
         response = requests.get(url, headers=self.headers, params=params)
